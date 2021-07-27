@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  report-mock:
+    image: mockserver/mockserver:mockserver-5.11.1
+    container_name: report-mock
+    environment:
+      - PORT
+    environment:
+      MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES: "true"
+    networks:
+      - report
+    ports:
+      - "$PORT:$PORT"
+    command: -logLevel DEBUG -serverPort $PORT
+
+  report-back:
+    image: node:14-slim
+    container_name: report-back
+    user: node
+    depends_on:
+      - report-mock
+    networks:
+      - report
+    environment:
+      - PATH_API
+      - HOST
+      - PORT
+    volumes:
+      - type: bind
+        source: $PATH_API
+        target: /launch
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        npm --prefix /launch install
+        npm --prefix /launch run all_mocks
+
+  report-front:
+    image: node:14-slim
+    container_name: report-front
+    restart: unless-stopped
+    user: node
+    depends_on:
+      - report-mock
+    environment:
+      - PATH_REPORT
+      - WEB_PORT
+    ports:
+      - "$WEB_PORT:$WEB_PORT"
+    volumes:
+      - type: bind
+        source: $PATH_REPORT
+        target: /launch
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        npm --prefix /launch install
+        npm --prefix /launch run build
+        npm --prefix /launch start
+
+networks:
+  report:
+    driver: bridge
