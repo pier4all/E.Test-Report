@@ -3,9 +3,10 @@ version: '3.7'
 services:
   report-mock:
     image: mockserver/mockserver:mockserver-5.11.1
-    container_name: report-mock
     environment:
+      - HOST
       - PORT
+    container_name: $HOST
     environment:
       MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES: "true"
     networks:
@@ -18,14 +19,14 @@ services:
     image: node:14-slim
     container_name: report-back
     user: node
-    depends_on:
-      - report-mock
-    networks:
-      - report
     environment:
       - PATH_API
       - HOST
       - PORT
+    depends_on:
+      - $HOST
+    networks:
+      - report
     volumes:
       - type: bind
         source: $PATH_API
