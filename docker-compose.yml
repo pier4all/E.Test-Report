@@ -42,12 +42,11 @@ services:
     container_name: report-front
     restart: unless-stopped
     user: node
+    depends_on:
+      - report-mock
     environment:
       - PATH_REPORT
-      - HOST
       - WEB_PORT
-    depends_on:
-      - $HOST
     ports:
       - "$WEB_PORT:$WEB_PORT"
     volumes:
